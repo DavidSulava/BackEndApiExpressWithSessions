@@ -16,8 +16,9 @@ const formidable = require('express-formidable');
 
 let sessionStore = new FileStore({});
 
-const ALLOWED_DOMAINS="http://localhost:3001, https://anime-react.herokuapp.com, http://anime-react.herokuapp.com"
-
+const ALLOWED_DOMAINS="http://localhost:3001, http://anime-react.herokuapp.com";
+const SESSION_SECRET_STR = 'Hello! __/ this is thr seckret** key&';
+const COOKY_SECRET='MY=/SECRET-0-for_cookies';
 
 var app = express();
 app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"}));
@@ -34,9 +35,9 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
-app.use(cookieParser(process.env.COOKY_SECRET));
+app.use(cookieParser(COOKY_SECRET));
 app.use(session({
-                  secret: process.env.SESSION_SECRET_STR,
+                  secret: SESSION_SECRET_STR,
                   store : sessionStore,
                   resave: true,
                   saveUninitialized: false,
