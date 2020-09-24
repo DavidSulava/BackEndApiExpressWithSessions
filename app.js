@@ -23,6 +23,7 @@ app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"})
 app.use(formidable());
 
 // view engine setup
+app.set('trust proxy', 1)
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
