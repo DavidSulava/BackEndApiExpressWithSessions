@@ -5,7 +5,6 @@ var cookieParser = require('cookie-parser');
 var session      = require('express-session');
 var FileStore    = require('session-file-store')(session);
 var logger       = require('morgan');
-var bodyParser   = require('body-parser');
 var hpp          = require('hpp');
 var contentLength = require('express-content-length-validator');
 
@@ -28,9 +27,6 @@ app.use(formidable());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.set('trust proxy', 1)
-
-
 
 app.use(logger('dev'));
 
@@ -42,8 +38,8 @@ app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
   resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 3600000, secure: true , httpOnly: true, SameSite: 'none' }
+  saveUninitialized: true,
+  cookie: { maxAge: 3600000, secure: true , httpOnly: false, SameSite: 'none' }
 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
