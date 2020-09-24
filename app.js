@@ -1,7 +1,6 @@
 var createError  = require('http-errors');
 var express      = require('express');
 var path         = require('path');
-var cookieParser = require('cookie-parser');
 var session      = require('express-session');
 var FileStore    = require('session-file-store')(session);
 var logger       = require('morgan');
@@ -17,7 +16,6 @@ let sessionStore = new FileStore();
 
 const ALLOWED_DOMAINS="http://localhost:3001, http://anime-react.herokuapp.com";
 const SESSION_SECRET_STR = "Hello! __/ this is thr seckret** key&";
-const COOKY_SECRET="MY=/SECRET-0-for_cookies";
 
 var app = express();
 app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"}));
@@ -37,9 +35,9 @@ app.use(hpp());
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 3600000, secure: true , httpOnly: false, SameSite: 'none' }
+  resave: true,
+  saveUninitialized: false,
+  cookie: { maxAge: 3600000, secure: false , httpOnly: false, SameSite: 'none' }
 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
