@@ -14,7 +14,7 @@ const formidable = require('express-formidable');
 
 let sessionStore = new FileStore();
 
-const ALLOWED_DOMAINS="http://localhost:3001, https://vue-simple-spa.herokuapp.com/, https://vue-simple-spa.herokuapp.com";
+const ALLOWED_DOMAINS="http://localhost:3001, https://vue-simple-spa.herokuapp.com";
 const SESSION_SECRET_STR = "Hello! __/ this is thr seckret** key&";
 
 var app = express();
