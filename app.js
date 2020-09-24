@@ -40,9 +40,9 @@ app.use(cookieParser(COOKY_SECRET));
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 3600000, secure: true , httpOnly: false, SameSite: 'none' }
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 3600000, secure: true , httpOnly: true }
 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
