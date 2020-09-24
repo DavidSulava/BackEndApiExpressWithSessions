@@ -13,7 +13,7 @@ var indexRouter  = require('./routes/index');
 var usersRouter  = require('./routes/users');
 const formidable = require('express-formidable');
 
-let sessionStore = new FileStore({ path: "./sessions" });
+let sessionStore = new FileStore({  });
 
 const ALLOWED_DOMAINS="http://localhost:3001, http://anime-react.herokuapp.com";
 const SESSION_SECRET_STR = "Hello! __/ this is thr seckret** key&";
@@ -33,7 +33,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
-app.use(cookieParser(COOKY_SECRET));
+
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
