@@ -1,5 +1,8 @@
 const nodemailer = require("nodemailer");
 
+const CONTACT_EMAIL = 'webproto3@gmail.com'
+const CONTACT_EMAIL_PASSWORD = 'qqqqqqq321'
+
 
 const serverError = function (error, res, at_where = '') {
     // .... to be improved.
@@ -23,9 +26,6 @@ const userSessionHandle = (req, res, user) => {
         isVerified: user.isVerified,
       };
 
-      // req.fields.user = { name: user.name, email: user.email };
-
-      // res.cookie('t_user', { name: user.name, email: user.email }, {signed: true} );
     } else {
       res.clearCookie('t_user')
     }
@@ -49,8 +49,8 @@ const sendEmail = async function (From, ToEmail, subject, html) {
       port: 465, // 587, 465
       secure: true, // true for 465, false for other ports
       auth: {
-        user: process.env.CONTACT_EMAIL,
-        pass: process.env.CONTACT_EMAIL_PASSWORD,
+        user: CONTACT_EMAIL,
+        pass: CONTACT_EMAIL_PASSWORD,
       }
     });
 
