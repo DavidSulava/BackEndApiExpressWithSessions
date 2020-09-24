@@ -25,7 +25,7 @@ const userSessionHandle = (req, res, user) => {
         lastName: user.lastName,
         isVerified: user.isVerified,
       };
-
+      console.log(req.session['user']);
     } else {
       res.clearCookie('t_user')
     }

@@ -30,20 +30,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(logger('dev'));
-// app.use(bodyParser.json()); // support json encoded bodies
-// app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
 app.use(cookieParser(COOKY_SECRET));
 app.use(session({
-                  secret: SESSION_SECRET_STR,
-                  store : sessionStore,
-                  resave: true,
-                  saveUninitialized: false,
-                  cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
+  secret: SESSION_SECRET_STR,
+  store : sessionStore,
+  resave: true,
+  saveUninitialized: false,
+  cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
-                }));
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS
