@@ -28,6 +28,7 @@ app.use(formidable());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+app.set('trust proxy', true);
 
 
 app.use(logger('dev'));
@@ -35,7 +36,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
-// app.use(cookieParser(COOKY_SECRET));
+app.use(cookieParser(COOKY_SECRET));
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
