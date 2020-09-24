@@ -14,7 +14,7 @@ const formidable = require('express-formidable');
 
 let sessionStore = new FileStore();
 
-const ALLOWED_DOMAINS="http://localhost:3001, https://vue-simple-spa.herokuapp.com,  http://vue-simple-spa.herokuapp.com";
+const ALLOWED_DOMAINS="http://localhost:3001, https://vue-simple-spa.herokuapp.com,  http://vue-simple-spa.herokuapp.com, https://vue-simple-spa.herokuapp.com/";
 const SESSION_SECRET_STR = "Hello! __/ this is thr seckret** key&";
 
 var app = express();
@@ -46,7 +46,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Enable CORS
 const allowedOrigins = ALLOWED_DOMAINS.split(',')
 app.use( function(req, res, next) {
-
+  console.log('******************** -----', allowedOrigins.indexOf(req.get('origin')));
   if ( allowedOrigins.indexOf(req.get('origin')) > -1 )
     {
       res.header("Access-Control-Allow-Origin",  req.headers.origin ); // update to match the domain you will make the request from
