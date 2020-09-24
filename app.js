@@ -38,7 +38,7 @@ app.use(cookieParser(COOKY_SECRET));
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
-  resave: true,
+  resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
