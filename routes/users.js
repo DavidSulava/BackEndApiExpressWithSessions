@@ -22,11 +22,11 @@ const wrongPassword = 'Неверный пароль';
 /* Check if User exists in Session*/
 router.get('/checkUser', async function (req, res, next) {
 
-  if(!req.session['user'])
+  if(!req.session.user)
     return res.status(401).send({user: null})
 
 
-    var user = req.session['user'];
+    var user = req.session.user;
 
     return res.status(200).send({
       user: {
