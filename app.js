@@ -14,7 +14,9 @@ var indexRouter  = require('./routes/index');
 var usersRouter  = require('./routes/users');
 const formidable = require('express-formidable');
 
-let sessionStore = new FileStore({})
+let sessionStore = new FileStore({});
+
+const ALLOWED_DOMAINS="http://localhost:3001, https://anime-react.herokuapp.com, http://anime-react.herokuapp.com"
 
 var app = express();
 app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"}));
@@ -43,7 +45,7 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS
-const allowedOrigins = process.env.ALLOWED_DOMAINS.split(',')
+const allowedOrigins = ALLOWED_DOMAINS.split(',')
 app.use( function(req, res, next)
   {
 
