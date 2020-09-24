@@ -21,7 +21,7 @@ const wrongPassword = 'Неверный пароль';
 
 /* Check if User exists in Session*/
 router.get('/checkUser', async function (req, res, next) {
-  console.log(req.session);
+
   if(!req.session['user'])
     return res.status(401).send({user: null})
 

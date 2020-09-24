@@ -8,7 +8,7 @@ var logger       = require('morgan');
 var bodyParser   = require('body-parser');
 var hpp          = require('hpp');
 var contentLength = require('express-content-length-validator');
-require('dotenv').config();
+
 
 var indexRouter  = require('./routes/index');
 var usersRouter  = require('./routes/users');
