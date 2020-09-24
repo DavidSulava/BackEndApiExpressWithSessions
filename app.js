@@ -45,28 +45,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS
 const allowedOrigins = ALLOWED_DOMAINS.split(',')
-app.use( function(req, res, next)
-  {
+app.use( function(req, res, next) {
 
-    if ( allowedOrigins.indexOf(req.get('origin')) > -1 )
-      {
-        res.header("Access-Control-Allow-Origin",  req.headers.origin ); // update to match the domain you will make the request from
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Range");
-      }
+  if ( allowedOrigins.indexOf(req.get('origin')) > -1 )
+    {
+      res.header("Access-Control-Allow-Origin",  req.headers.origin ); // update to match the domain you will make the request from
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, Range");
+    }
 
-    // res.header('Access-Control-Expose-Headers', 'Content-Length');
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header("preflightContinue", true);
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  // res.header('Access-Control-Expose-Headers', 'Content-Length');
+  res.header('Access-Control-Allow-Credentials', true);
+  res.header("preflightContinue", true);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
 
-    if ( req.method === 'OPTIONS')
-      {
-        res.status(204).end();
-      }
-    else
-      next();
-  });
+  if ( req.method === 'OPTIONS')
+    {
+      res.status(204).end();
+    }
+  else
+    next();
+});
 
 // DataBase connection
 var db_con  = require('./backend/db_connection');
