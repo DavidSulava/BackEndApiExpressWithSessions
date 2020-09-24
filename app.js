@@ -28,6 +28,7 @@ app.use(formidable());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+app.set('trustproxy', true);
 
 app.use(logger('dev'));
 
@@ -38,7 +39,7 @@ app.use(cookieParser(COOKY_SECRET));
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
-  resave: false,
+  resave: true,
   saveUninitialized: true,
   cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
