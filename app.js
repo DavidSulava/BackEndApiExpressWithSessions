@@ -35,13 +35,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
-app.use(cookieParser(COOKY_SECRET));
+// app.use(cookieParser(COOKY_SECRET));
 app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
   resave: true,
   saveUninitialized: true,
-  cookie: { maxAge: 3600000, secure: true, httpOnly: false, SameSite: 'none' }
+  cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
