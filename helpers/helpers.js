@@ -19,13 +19,12 @@ const userSessionHandle = (req, res, user) => {
     if (!req.session['user']) {
       req.session['user'] = {
         _id: user._id,
-        name: user.name,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         isVerified: user.isVerified,
       };
-      console.log(req.session['user']);
+      console.log('************************ --- ', req.session);
     } else {
       res.clearCookie('t_user')
     }
