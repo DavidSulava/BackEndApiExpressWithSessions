@@ -39,7 +39,7 @@ app.use(session({
   secret: SESSION_SECRET_STR,
   store : sessionStore,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
 }));
