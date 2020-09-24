@@ -28,6 +28,7 @@ app.use(formidable());
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+app.set('trust proxy', 1)
 
 
 
@@ -42,7 +43,7 @@ app.use(session({
   store : sessionStore,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 3600000, secure: true , httpOnly: true }
+  cookie: { maxAge: 3600000, secure: true , httpOnly: true, SameSite: 'none' }
 
 }));
 app.use(express.static(path.join(__dirname, 'public')));
