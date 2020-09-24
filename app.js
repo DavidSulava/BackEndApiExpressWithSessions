@@ -18,6 +18,7 @@ let sessionStore = new FileStore({});
 
 const ALLOWED_DOMAINS="http://localhost:3001, https://anime-react.herokuapp.com, http://anime-react.herokuapp.com"
 
+
 var app = express();
 app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"}));
 
