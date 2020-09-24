@@ -44,9 +44,9 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS
-const allowedOrigins = ALLOWED_DOMAINS.split(',')
+const allowedOrigins = ALLOWED_DOMAINS.split(',').map( e => e.trim())
 app.use( function(req, res, next) {
-  console.log(ALLOWED_DOMAINS, '******************** -----', req.get('origin') );
+
   if ( allowedOrigins.indexOf(req.get('origin')) > -1 )
     {
       res.header("Access-Control-Allow-Origin",  req.headers.origin ); // update to match the domain you will make the request from
