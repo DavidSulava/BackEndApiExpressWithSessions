@@ -1,7 +1,6 @@
 const mongoose= require('mongoose');
 
-const atlas   = "mongodb+srv://server:qqqqqqq321~@cluster0-ffo6u.mongodb.net/simpleApp?retryWrites=true&w=majority";
-
+const atlas   = process.env.MONGO_ATLAS_STR
 
 mongoose.connect( atlas, {useNewUrlParser: true, useUnifiedTopology: true}).catch(error => console.log(error));
 var db = mongoose.connection;

@@ -23,9 +23,6 @@ const userSessionHandle = (req, res, user) => {
         isVerified: user.isVerified,
       };
 
-      // req.fields.user = { name: user.name, email: user.email };
-
-      // res.cookie('t_user', { name: user.name, email: user.email }, {signed: true} );
     } else {
       res.clearCookie('t_user')
     }

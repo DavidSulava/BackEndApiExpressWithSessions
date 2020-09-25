@@ -1,11 +1,9 @@
 var createError  = require('http-errors');
 var express      = require('express');
 var path         = require('path');
-var cookieParser = require('cookie-parser');
 var session      = require('express-session');
 var FileStore    = require('session-file-store')(session);
 var logger       = require('morgan');
-var bodyParser   = require('body-parser');
 var hpp          = require('hpp');
 var contentLength = require('express-content-length-validator');
 require('dotenv').config();
@@ -16,7 +14,6 @@ const formidable = require('express-formidable');
 
 let sessionStore = new FileStore({});
 
-const ALLOWED_DOMAINS="http://localhost:3001, https://anime-react.herokuapp.com, http://anime-react.herokuapp.com"
 
 var app = express();
 app.use(contentLength.validateMax({max: 9999, status: 400, message: "stop it!"}));
@@ -28,24 +25,23 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(logger('dev'));
-// app.use(bodyParser.json()); // support json encoded bodies
-// app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
-app.use(cookieParser(process.env.COOKY_SECRET));
-app.use(session({
-                  secret: process.env.SESSION_SECRET_STR,
-                  store : sessionStore,
-                  resave: true,
-                  saveUninitialized: false,
-                  cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
 
-                }));
+app.use(session({
+    secret: process.env.SESSION_SECRET_STR,
+    store : sessionStore,
+    resave: true,
+    saveUninitialized: false,
+    cookie: { maxAge: 3600000, secure: false, httpOnly: false, SameSite: 'none' }
+
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS
-const allowedOrigins = ALLOWED_DOMAINS.split(',')
+const allowedOrigins = process.env.ALLOWED_DOMAINS.split(',').map( el => el.trim())
 app.use( function(req, res, next)
   {
 
