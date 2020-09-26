@@ -80,8 +80,10 @@ router.post('/register', async function (req, res, next) {
 
     let dataSaved = await user.save();
     if (dataSaved) {
-      // -----------[ Create Session ]--------------
-      userSessionHandle(req, res, user);
+
+      // -----------[ Handle jwt ]--------------
+      userPrepared =  userObject(check)
+      let jwt = jwtSetToken({...userPrepared, '_id': user._id }, process.env.SESSION_SECRET_STR);
 
       //  ---------- [ send email ] -------------
       // var protocol = req.connection.encrypted ? 'https://' : 'http://';
@@ -95,7 +97,7 @@ router.post('/register', async function (req, res, next) {
         msg: {
           regSuccess: user.email + registered
         },
-        user: userObject(user)
+        user: {...userPrepared, jwt}
       });
     } else
       return serverError(dataSaved, res, 'registering the user')
@@ -139,7 +141,7 @@ router.post('/login', async function (req, res) {
     }
 
     userPrepared =  userObject(check)
-    let jwt = jwtSetToken(userPrepared, process.env.SESSION_SECRET_STR);
+    let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
 
     return res.status(200).send({
       msg: {
@@ -153,94 +155,86 @@ router.post('/login', async function (req, res) {
 })
 
 /* Update User*/
-router.post('/updateUser', async function (req, res) {
-
-  if (req.session['user']) {
-
-    var userEmail = req.fields.email ? req.fields.email : '';
-    var firstName = req.fields.firstName ? req.fields.firstName : '';
-    var lastName = req.fields.lastName ? req.fields.lastName : '';
+router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
 
-    let validateMessage = userValidator( userEmail );
-    if (validateMessage)
+
+  var userEmail = req.fields.email ? req.fields.email : '';
+  var firstName = req.fields.firstName ? req.fields.firstName : '';
+  var lastName = req.fields.lastName ? req.fields.lastName : '';
+
+
+  let validateMessage = userValidator( userEmail );
+  if (validateMessage)
+    return res.status(401).send({
+      msg: validateMessage
+    });
+
+
+  var id = req.user._id
+
+  var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
+
+  if (!check)
+    return res.status(400).send({
+      msg: {
+        message: badCredentials_m
+      }
+    });
+
+  // -----------[ Check and Update Email ]--------------
+  if (userEmail && userEmail != check.email) {
+    let checkEmail = User_scm.find({
+      email: userEmail
+    })
+
+
+    if (checkEmail)
       return res.status(401).send({
-        msg: validateMessage
-      });
-
-
-    var id = req.session['user']._id
-
-    var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
-
-    if (!check)
-      return res.status(400).send({
         msg: {
-          message: badCredentials_m
+          emailErr: 'A user with such email already exists!'
         }
       });
-
-    // -----------[ Check and Update Email ]--------------
-    if (userEmail && userEmail != check.email) {
-      let checkEmail = User_scm.find({
-        email: userEmail
-      })
-
-
-      if (checkEmail)
-        return res.status(401).send({
-          msg: {
-            emailErr: 'A user with such email already exists!'
-          }
-        });
-      else {
-        check.email = userEmail;
-        check.isVerified = false;
-      }
-
-    }
-
-    check.firstName = firstName
-    check.lastName = lastName
-
-    let dataSaved = await check.save();
-    if (dataSaved) {
-      var updatedUser = {
-        email: check.email,
-        firstName: check.firstName,
-        lastName: check.lastName,
-        isVerified: check.isVerified
-      };
-      // -----------[ Update Session Data ]--------------
-      req.session['user'] = {
-        ...req.session['user'],
-        ...updatedUser
-      }
-
-      return res.status(200).send({
-        msg: {
-          userUpdated: userUpdated
-        },
-        user: updatedUser
-      });
+    else {
+      check.email = userEmail;
+      check.isVerified = false;
     }
 
   }
+
+  check.firstName = firstName
+  check.lastName = lastName
+
+  let dataSaved = await check.save();
+  if (dataSaved) {
+
+    userPrepared =  userObject(check)
+    let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
+
+    return res.status(200).send({
+      msg: {
+        userUpdated: userUpdated
+      },
+      user: {...userPrepared, jwt}
+    });
+  }
+
+  
 
 
 });
 
 
 /* [ Change the Password ]*/
-router.post('/newPassword', async function (req, res) {
+router.post('/newPassword', jwtGetByToken, async function (req, res) {
   var oldUserPassword = req.fields.password ? req.fields.password : '';
   var newUserPassword = req.fields.new_assword ? req.fields.new_assword : '';
 
 
   // -----------[ Change the Password ]---------------
-  if (oldUserPassword && newUserPassword && req.session['user']) {
+  if (oldUserPassword && newUserPassword) {
 
-    var id = req.session['user']._id;
+    var id = req.user._id;
     var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
 
     if (!check) {
@@ -268,18 +262,13 @@ router.post('/newPassword', async function (req, res) {
       check.password = newUserPassword;
 
       var newPasSaved = await check.save()
-      var updatedUser = {
-        email: check.email,
-        firstName: check.firstName,
-        lastName: check.lastName,
-        isVerified: check.isVerified
-      };
+
       if (newPasSaved)
         return res.status(200).send({
           msg: {
             passUpdated: passChanged
           },
-          user: updatedUser
+          user: userObject(check)
         });
       else
         return serverError(newPasSaved, 'saving updated data of the user');
@@ -295,19 +284,10 @@ router.post('/newPassword', async function (req, res) {
 })
 
 /* Delete User*/
-router.post('/deleteUser', async function (req, res) {
+router.post('/deleteUser', jwtGetByToken, async function (req, res) {
 
   var userEmail = req.fields.email ? req.fields.email : '';
   var userPassword = req.fields.password ? req.fields.password : '';
-
-
-
-  if (!req.session['user'])
-    return res.status(400).send({
-      msg: {
-        message: badCredentials_m
-      }
-    });
 
 
   var validatePass = userValidator('********', userEmail, userPassword, userPassword);
@@ -316,7 +296,7 @@ router.post('/deleteUser', async function (req, res) {
       msg: validatePass
     });
 
-  var id = req.session['user']._id || null;
+  var id = req.user._id || null;
   var check = await User_scm.findById(id).catch(error => serverError(error, 'deleting the user'));
 
   if (!check)
@@ -343,8 +323,7 @@ router.post('/deleteUser', async function (req, res) {
 
     check.remove(function (err, check) {
 
-      if (err)
-        return serverError(err, `removing  the user: ${ check.email }`);
+      if (err) return serverError(err, `removing  the user: ${ check.email }`);
 
       if (check.$isDeleted())
         return res.status(200).send({
@@ -368,71 +347,63 @@ router.post('/deleteUser', async function (req, res) {
 });
 
 // send verification link from user settings
-router.get('/email/sendVerification', async function (req, res) {
+router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
 
-  if (req.session['user']) {
-    var userEmail = req.query.email ? req.query.email : '';
+  var userEmail = req.query.email ? req.query.email : '';
 
-    // -----------[ Check and Update Email ]--------------
-    if (userEmail) {
-      var checkEmail = false
-      if (userEmail != req.session['user'].email)
-        checkEmail = User_scm.find({
-          email: userEmail
-        })
+  // -----------[ Check and Update Email ]--------------
+  if (userEmail) {
+    
+    var checkEmail = false
+
+    if (userEmail != req.user.email)
+      checkEmail = User_scm.find({
+        email: userEmail
+      })
 
 
-      if (checkEmail)
-        return res.status(401).send({
-          msg: {
-            emailErr: 'A user with such email already exists!'
-          }
-        });
-      else {
-        var check = await User_scm.findById(req.session['user']._id).catch(error => serverError(error, res, 'updating the user'));
-
-        var hostName = req.headers.origin;
-        var cTime = Date.now() + (1000 * 60 * 15);
-        var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
-        var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
-
-        // var protocol = req.connection.encrypted ? 'https://' : 'http://';
-        var html = `<div><p>Please click the link below to confirm your email !</p> <a href='${link}'>Click Here</a></div>`;
-
-        // --- change data in database
-        check.token = hash;
-        check.timeToken = cTime;
-        check.isVerified = false;
-
-        let dataSaved = await check.save();
-
-        if (dataSaved) {
-          //  ---------- [ send email confirmation link ] -------------
-          await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
-
-          var updatedUser = {
-            email: check.email,
-            firstName: check.firstName,
-            lastName: check.lastName,
-            isVerified: check.isVerified
-          };
-          // -----------[ Update Session Data ]--------------
-          req.session['user'] = {
-            ...req.session['user'],
-            ...updatedUser
-          }
-
-          return res.status(200).send({
-            msg: {
-              verLinkSend: `Verification link has been sent to ${ check.email }`
-            },
-            user: updatedUser
-          });
+    if (checkEmail)
+      return res.status(401).send({
+        msg: {
+          emailErr: 'A user with such email already exists!'
         }
-      }
+      });
+    else {
+      var check = await User_scm.findById(req.user._id).catch(error => serverError(error, res, 'updating the user'));
 
+      var hostName = req.headers.origin;
+      var cTime = Date.now() + (1000 * 60 * 15);
+      var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
+      var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
+
+      // var protocol = req.connection.encrypted ? 'https://' : 'http://';
+      var html = `<div><p>Please click the link below to confirm your email !</p> <a href='${link}'>Click Here</a></div>`;
+
+      // --- change data in database
+      check.token = hash;
+      check.timeToken = cTime;
+      check.isVerified = false;
+
+      let dataSaved = await check.save();
+
+      if (dataSaved) {
+        //  ---------- [ send email confirmation link ] -------------
+        await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
+
+        userPrepared =  userObject(check)
+        let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
+
+        return res.status(200).send({
+          msg: {
+            verLinkSend: `Verification link has been sent to ${ check.email }`
+          },
+          user: {...userPrepared, jwt}
+        });
+      }
     }
+
   }
+  
 })
 
 /* Email Confirmation Check*/
@@ -456,12 +427,14 @@ router.get('/email/confirmation', async function (req, res, next) {
       var cTime = Date.now();
 
       if (cTime <= check.timeToken) {
+
         check.isVerified = true;
         let dataSaved = await check.save();
 
         if (dataSaved) {
+          
           // -----------[ Create Session ]--------------
-          if (!req.session['user'])
+          if (!req.session['user']) //  <<<<<<<<<<<<<<---- TO BE DONE
             userSessionHandle(req, res, check);
           else
             req.session['user'] = {
@@ -469,7 +442,7 @@ router.get('/email/confirmation', async function (req, res, next) {
               ...{
                 isVerified: check.isVerified
               }
-            }
+            }// >>>>>>>>>> -------
 
           return res.status(200).send({
             msg: {
