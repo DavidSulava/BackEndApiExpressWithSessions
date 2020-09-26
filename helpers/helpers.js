@@ -1,8 +1,5 @@
 const nodemailer = require("nodemailer");
 
-const CONTACT_EMAIL = 'webproto3@gmail.com'
-const CONTACT_EMAIL_PASSWORD = 'qqqqqqq321'
-
 
 const serverError = function (error, res, at_where = '') {
     // .... to be improved.
@@ -48,8 +45,8 @@ const sendEmail = async function (From, ToEmail, subject, html) {
       port: 465, // 587, 465
       secure: true, // true for 465, false for other ports
       auth: {
-        user: CONTACT_EMAIL,
-        pass: CONTACT_EMAIL_PASSWORD,
+        user: process.env.CONTACT_EMAIL,
+        pass: process.env.CONTACT_EMAIL_PASSWORD,
       }
     });
 
