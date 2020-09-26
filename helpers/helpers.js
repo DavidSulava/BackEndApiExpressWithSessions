@@ -2,7 +2,11 @@ const nodemailer = require("nodemailer");
 var jwt = require('jsonwebtoken');
 
 
-const jwtToken = (req, res, next) => {
+const jwtSetToken = (object, secret, expires = '1h') => {
+  return jwt.sign( object, secret, { expiresIn: expires } )
+}
+
+const jwtGetByToken = (req, res, next) => {
 
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(" ")[1];
@@ -89,5 +93,6 @@ module.exports = {
   userSessionHandle,
   userObject,
   sendEmail,
-  jwtToken
+  jwtGetByToken,
+  jwtSetToken
 }

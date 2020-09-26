@@ -7,7 +7,7 @@ const User_scm = require('../backend/models/user.model');
 const userValidator = require( '../backend/validators/userValidator' )
 
 
-const { serverError, userSessionHandle, userObject, sendEmail, jwtToken } = require("../helpers/helpers");
+const { serverError, userSessionHandle, userObject, sendEmail, jwtGetByToken, jwtSetToken } = require("../helpers/helpers");
 
 const badCredentials_m = "Пользователя с такими данными не существует";
 const success = "Введенные данные верны, доступ разрешен.";
