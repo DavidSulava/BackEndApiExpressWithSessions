@@ -20,44 +20,19 @@ const wrongPassword = 'Неверный пароль';
 
 
 /* Check if User exists in Session*/
-router.get('/checkUser', async function (req, res, next) {
+router.get('/checkUser', jwtGetByToken, async function (req, res, next) {
 
-  if(!req.session['user'])
-    return res.status(401).send({user: null})
-
-
-    var user = req.session['user'];
-
-    return res.status(200).send({
-      user: {
-        name: user.name,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isVerified: user.isVerified
-      }
-    });
-
-
+  return res.status(200).send({user: req.user});
 });
 
 /* Delete User Session*/
-router.get('/logOut', async function (req, res, next) {
+router.get('/logOut', jwtGetByToken,  async function (req, res, next) {
 
-  if (req.session['user']) {
-    req.session.destroy();
-    res.clearCookie('connect.sid', {
-      secure: false,
-      httpOnly: true
-    });
+  req.headers['authorization'] = '';
 
-    return res.status(200).send({
-      user: null
-    });
-  } else
-    return res.status(401).send({
-      user: null
-    });
+  return res.status(200).send({
+    user: null
+  });
 });
 
 /* Register User*/
@@ -154,8 +129,8 @@ router.post('/login', async function (req, res) {
     });
 
   check.comparePassword(userPassword, (err, callBack) => {
-    if (err)
-      serverError(err, 'at password comparison --at attempt to login');
+
+    if (err) serverError(err, 'at password comparison --at attempt to login');
 
     if (!callBack) {
       return res.status(401).send({
@@ -165,19 +140,16 @@ router.post('/login', async function (req, res) {
       });
     }
 
-    userSessionHandle(req, res, check)
+    userPrepared =  userObject(check)
+
+    jwtSetToken(userPrepared, process.env.SESSION_SECRET_ST);
 
 
     return res.status(200).send({
       msg: {
         loginSuccess: success
       },
-      user: {
-        email: check.email,
-        firstName: check.firstName,
-        lastName: check.lastName,
-        isVerified: check.isVerified
-      }
+      user: { userPrepared }
     });
 
   })
