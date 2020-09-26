@@ -18,6 +18,7 @@ const jwtGetByToken = (req, res, next) => {
   jwt.verify(token, process.env.SESSION_SECRET_STR, (err, user) => {
 
     if (err) return res.status(401).send({
+      msg:{ errorCred: 'session is too old' },
       user: null
     }); // not valid token
 
