@@ -20,15 +20,13 @@ const wrongPassword = 'Неверный пароль';
 
 
 /* Check if User exists in Session*/
-router.get('/checkUser', jwtGetByToken, async function (req, res, next) {
+router.get('/checkUser', jwtGetByToken, function (req, res) {
 
   return res.status(200).send({user: req.user});
 });
 
 /* Delete User Session*/
-router.get('/logOut', jwtGetByToken,  async function (req, res, next) {
-
-  req.headers['authorization'] = '';
+router.get('/logOut', jwtGetByToken,  async function (req, res) {
 
   return res.status(200).send({
     user: null
@@ -141,15 +139,14 @@ router.post('/login', async function (req, res) {
     }
 
     userPrepared =  userObject(check)
-
-    jwtSetToken(userPrepared, process.env.SESSION_SECRET_ST);
-
+    let jwt = jwtSetToken(userPrepared, process.env.SESSION_SECRET_STR);
 
     return res.status(200).send({
       msg: {
         loginSuccess: success
       },
-      user: { userPrepared }
+      user: { ...userPrepared,  jwt  },
+     
     });
 
   })

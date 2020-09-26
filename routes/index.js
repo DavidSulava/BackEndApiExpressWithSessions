@@ -1,18 +1,18 @@
 var express = require('express');
 var router = express.Router();
 
+const {jwtGetByToken } = require("../helpers/helpers");
+
 
 const User_scm = require('../backend/models/user.model');
 
 /* GET home page. */
-router.get('/bills', async function(req, res, next) {
+router.get('/bills', jwtGetByToken, async function(req, res, next) {
 
-  if(!req.session['user'])
-    return res.status(401).send({user: null});
 
   let query = {};
 
-  let userEmail  = req.session['user'].email;
+  let userEmail  = req.user.email;
   let getRequest =  req.query.hasOwnProperty("page") && req.query.page > 0 ? req.query : {...req.query, page: 0  };
   let curentPage = (getRequest.page && getRequest.page > 1) ? getRequest.page : 0;
   let modifuedPage = (curentPage > 2) ? curentPage - 1 : (curentPage == 2)? 1 : curentPage ;
@@ -50,14 +50,11 @@ router.get('/bills', async function(req, res, next) {
     });
 });
 
-router.get('/calls', async function(req, res, next) {
-
-  if(!req.session['user'])
-    return res.status(401).send({user: null});
+router.get('/calls', jwtGetByToken, async function(req, res, next) {
 
   let query = {};
 
-  let userEmail  = req.session['user'].email;
+  let userEmail  = req.user.email;
   let getRequest =  req.query.hasOwnProperty("page") && req.query.page > 0 ? req.query : {...req.query, page: 0  };
   let curentPage = (getRequest.page && getRequest.page > 1) ? getRequest.page : 0;
   let modifuedPage = (curentPage > 2) ? curentPage - 1 : (curentPage == 2)? 1 : curentPage ;

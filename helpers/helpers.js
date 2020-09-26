@@ -3,13 +3,13 @@ var jwt = require('jsonwebtoken');
 
 
 const jwtSetToken = (object, secret, expires = '1h') => {
-  return jwt.sign( object, secret, { expiresIn: expires } )
+  return jwt.sign( object, secret, { expiresIn: expires } );
 }
 
 const jwtGetByToken = (req, res, next) => {
 
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(" ")[1];
+  const authHeader = req.get('authorization');
+  const token = authHeader && authHeader.split(" ")[0];
 
   if (!token) return res.status(401).send({
     user: null
@@ -18,7 +18,7 @@ const jwtGetByToken = (req, res, next) => {
   jwt.verify(token, process.env.SESSION_SECRET_STR, (err, user) => {
 
     if (err) return res.status(401).send({
-      msg:{ errorCred: 'session is too old' },
+      msg:{ errorCred: err },
       user: null
     }); // not valid token
 
@@ -45,14 +45,14 @@ const userSessionHandle = (req, res, user) => {
 
 }
 const userObject = (data) => {
-  var userPrepared = {
+
+  return {
     name: data.name,
     email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
     isVerified: data.isVerified
-  };
-  return userPrepared
+  }
 }
 
 const sendEmail = async function (From, ToEmail, subject, html) {

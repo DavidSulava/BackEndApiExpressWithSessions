@@ -6,6 +6,7 @@ var FileStore    = require('session-file-store')(session);
 var logger       = require('morgan');
 var hpp          = require('hpp');
 var contentLength = require('express-content-length-validator');
+require('dotenv').config()
 
 
 var indexRouter  = require('./routes/index');
