@@ -2,27 +2,49 @@ const nodemailer = require("nodemailer");
 var jwt = require('jsonwebtoken');
 
 
-const jwtSetToken = (object, secret, expires = '1h') => {
+
+const jwtSetToken = (object, secret, expires=null ) => {
+
+  // JWT
+  if( !expires ) 
+    return jwt.sign( object, secret );
+
+  // JWT - refresh
   return jwt.sign( object, secret, { expiresIn: expires } );
 }
 
 const jwtGetByToken = (req, res, next) => {
 
   const authHeader = req.get('authorization');
-  const token = authHeader && authHeader.split(" ")[0];
+  const jwt_static= authHeader && authHeader.split(" ")[0];
 
-  if (!token) return res.status(401).send({
+  const jwt_refresh = req.cookies.jwt_refresh && req.cookies.jwt_refresh.split(" ")[0]
+  
+  if (!jwt_static || !jwt_refresh ) return res.status(401).send({
     user: null
   });
+ 
+  try{
+    jwt.verify( jwt_refresh, process.env.JWT_TOKEN_REFRESH )
+  }
+  catch(err){
+    // not valid token
+    return res.status(401).send({
+      msg:{ errorCred: 'Session expired' },
+      user: null
+    }); 
+  }
 
-  jwt.verify(token, process.env.SESSION_SECRET_STR, (err, user) => {
+  jwt.verify( jwt_static, process.env.JWT_TOKEN, (err, user) => {
 
     if (err) return res.status(401).send({
       msg:{ errorCred: err },
       user: null
     }); // not valid token
 
+
     req.user = user
+    res.cookie("jwt_refresh", jwt_refresh, {httpOnly: true})
 
     next();
 
@@ -47,7 +69,6 @@ const userSessionHandle = (req, res, user) => {
 const userObject = (data) => {
 
   return {
-    name: data.name,
     email: data.email,
     firstName: data.firstName,
     lastName: data.lastName,
@@ -89,11 +110,12 @@ const serverError = function (error, res, at_where = '') {
 
 }
 
+
 module.exports = {
-  serverError,
   userSessionHandle,
   userObject,
   sendEmail,
   jwtGetByToken,
-  jwtSetToken
+  jwtSetToken,
+  serverError,
 }

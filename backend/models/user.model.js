@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema(
   {
     email     : {type : String, required: true, trim:true },
     password  : {type : String, required: true, trim:true },
+    jwt       : {type : String, default : null },
+    jwtRefresh: {type : String, default : null },
     firstName : {type : String, default : '' },
     lastName  : {type : String, default : '' },
     isVerified: {type : Boolean, default : false },

@@ -6,14 +6,13 @@ var FileStore    = require('session-file-store')(session);
 var logger       = require('morgan');
 var hpp          = require('hpp');
 var contentLength = require('express-content-length-validator');
+const cookieParser = require("cookie-parser");
 require('dotenv').config()
 
 
 var indexRouter  = require('./routes/index');
 var usersRouter  = require('./routes/users');
 const formidable = require('express-formidable');
-
-let sessionStore = new FileStore();
 
 
 var app = express();
@@ -31,15 +30,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
+app.use(cookieParser());
 
-app.use(session({
-  secret: process.env.SESSION_SECRET_STR,
-  store : sessionStore,
-  resave: true,
-  saveUninitialized: false,
-  cookie: { maxAge: 3600000, secure: true , httpOnly: false, SameSite: 'none' }
-
-}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Enable CORS

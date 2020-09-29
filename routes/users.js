@@ -2,12 +2,20 @@ var express = require('express');
 var router = express.Router();
 
 const bcrypt = require("bcryptjs");
+var jwt = require('jsonwebtoken');
 
 const User_scm = require('../backend/models/user.model');
-const userValidator = require( '../backend/validators/userValidator' )
+const userValidator = require('../backend/validators/userValidator')
 
 
-const { serverError, userSessionHandle, userObject, sendEmail, jwtGetByToken, jwtSetToken } = require("../helpers/helpers");
+const {
+  serverError,
+  userSessionHandle,
+  userObject,
+  sendEmail,
+  jwtGetByToken,
+  jwtSetToken
+} = require("../helpers/helpers");
 
 const badCredentials_m = "Пользователя с такими данными не существует";
 const success = "Введенные данные верны, доступ разрешен.";
@@ -17,16 +25,82 @@ const emailConfEr = 'Email verification timeout exceeded ! Please, login and ver
 const passChanged = 'Пароль успешно изменен';
 const wrongPassword = 'Неверный пароль';
 
+const jwtExpTime = eval(process.env.JWT_EXPIRES);
+
 
 
 /* Check if User exists in Session*/
-router.get('/checkUser', jwtGetByToken, function (req, res) {
+router.get('/checkUser', jwtGetByToken, async function (req, res) {
 
-  return res.status(200).send({user: req.user});
+  return res.status(200).send({
+    user: req.user
+  });
 });
 
+/* Refresh jwt token*/
+router.get('/jwt_refresh',  function (req, res) {
+
+  const jwt_refresh = req.cookies.jwt_refresh && req.cookies.jwt_refresh.split(" ")[0];
+  const authHeader  = req.get('authorization');
+
+  if (!jwt_refresh || !authHeader)
+    return res.status(401).send({
+      user: null
+    });
+
+  jwt.verify(jwt_refresh, process.env.JWT_TOKEN_REFRESH, async (err, user) => {
+
+    // not valid token
+    if (err) 
+      return res.status(401).send({
+        msg: { errorCred: err },
+        user: null
+      });
+
+    var check = await User_scm.findById(user._id).catch(error => serverError(error, res, 'updating the user'));
+
+    if (!check || !check.jwtRefresh || authHeader != check.jwt )
+      return res.status(400).send({
+        msg: {
+          message: badCredentials_m
+        }
+      });
+
+    let userObj = userObject(check)
+
+    check.jwtRefresh = jwtSetToken({ ...userObj,'_id': check._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime );
+    let isSaved = await check.save();
+
+    // error for testing purposes
+    if (!isSaved)
+      return serverError(dataSaved, res, 'refresh token saving')
+
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true })
+
+    return res.status(200).send({
+      user: {
+        ...userObj,
+        jwt:authHeader,
+        jwt_time_start: jwtExpTime
+      }
+    });
+  })
+
+});
+
+
+
 /* Delete User Session*/
-router.get('/logOut', jwtGetByToken,  async function (req, res) {
+router.get('/logOut', jwtGetByToken, async function (req, res) {
+
+  var id = req.user._id
+
+  var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
+
+  if(check){
+    check.jwtRefresh = null;
+    check.save();
+  }
 
   return res.status(200).send({
     user: null
@@ -34,7 +108,7 @@ router.get('/logOut', jwtGetByToken,  async function (req, res) {
 });
 
 /* Register User*/
-router.post('/register', async function (req, res, next) {
+router.post('/register', async function (req, res ) {
 
   var userEmail = req.fields.email ? req.fields.email : '';
   var firstName = req.fields.firstName ? req.fields.firstName : '';
@@ -43,7 +117,7 @@ router.post('/register', async function (req, res, next) {
   var password_confirmation = req.fields.password_confirmation ? req.fields.password_confirmation : '';
 
 
-  let validateMessage = userValidator( userEmail, userPassword, password_confirmation);
+  let validateMessage = userValidator(userEmail, userPassword, password_confirmation);
 
   if (validateMessage)
     return res.status(401).json({
@@ -51,63 +125,63 @@ router.post('/register', async function (req, res, next) {
     });
 
 
-
   var check = await User_scm.findOne({
     email: userEmail
-  }).catch(error => {
-    return serverError(error, res, 'registering the user')
-  });
+  }).catch(error => { return serverError(error, res, 'registering the user') });
 
-  if (!check) {
-    //  ---------- [ variables for email authentication ] -------------
-    // var hostName = req.get('x-forwarded-host');
-    // var hostName = require("os").hostname();
-    var hostName = req.headers.origin;
-    var cTime = Date.now() + (1000 * 60 * 15);
-    var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
-    var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
-
-
-    var user = new User_scm({
-      email: userEmail,
-      password: userPassword,
-      firstName: firstName,
-      lastName: lastName,
-      token: hash,
-      timeToken: cTime
-    });
-
-
-    let dataSaved = await user.save();
-    if (dataSaved) {
-
-      // -----------[ Handle jwt ]--------------
-      userPrepared =  userObject(check)
-      let jwt = jwtSetToken({...userPrepared, '_id': user._id }, process.env.SESSION_SECRET_STR);
-
-      //  ---------- [ send email ] -------------
-      // var protocol = req.connection.encrypted ? 'https://' : 'http://';
-      var html = `<div><p>Пожалуйста, пройдите по ссылке что бы подтвердить свой адрес эл.почты !</p> <a href='${link}'>Нажмите сдесь</a></div>`;
-
-      await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
-
-
-      // --------- [ return Response] ---------------
-      return res.status(200).json({
-        msg: {
-          regSuccess: user.email + registered
-        },
-        user: {...userPrepared, jwt}
-      });
-    } else
-      return serverError(dataSaved, res, 'registering the user')
-
-  } else
+  if (check)
     return res.status(401).json({
       msg: {
         errorCred: 'Такой пользователь уже существует. Пожалуйста, введите другой адрес эл.почты !'
       }
     });
+
+  //  ---------- [ variables for email authentication ] -------------
+
+  var hostName = req.headers.origin;
+  var cTime = Date.now() + (1000 * 60 * 15);
+  var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
+  var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
+
+  // -----------[ Handle jwt ]--------------
+
+  let userPrepared = {
+    email: userEmail,
+    firstName: firstName,
+    lastName: lastName,
+    isVerified: false
+  }
+
+  var user = new User_scm({
+    _id: new ObjectId(),
+    ...userPrepared,
+    jwt: jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN),
+    jwtRefresh: jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime),
+    password: userPassword,
+    token: hash,
+    timeToken: cTime
+  });
+
+  let isSaved = await user.save();
+  if (!isSaved)
+    return serverError(isSaved, res, 'registering the user')
+
+  //  ---------- [ send email ] -------------
+  // var protocol = req.connection.encrypted ? 'https://' : 'http://';
+  var html = `<div><p>Пожалуйста, пройдите по ссылке что бы подтвердить свой адрес эл.почты !</p> <a href='${link}'>Нажмите сдесь</a></div>`;
+
+  await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
+
+  // --------- [ return Response] ---------------
+  res.cookie("jwt_refresh", user.jwtRefresh, { httpOnly: true });
+
+  return res.status(200).json({
+    msg: { regSuccess: user.email + registered },
+    user: {
+      ...userPrepared,
+      jwt: user.jwt,
+      jwt_time_start:  jwtExpTime }
+  });
 
 });
 
@@ -116,6 +190,7 @@ router.post('/login', async function (req, res) {
 
   var userEmail = req.fields.email ? req.fields.email : '';
   var userPassword = req.fields.password ? req.fields.password : '';
+
 
   var check = await User_scm.findOne({
     email: userEmail
@@ -128,7 +203,7 @@ router.post('/login', async function (req, res) {
       }
     });
 
-  check.comparePassword(userPassword, (err, callBack) => {
+  check.comparePassword(userPassword, async (err, callBack) => {
 
     if (err) serverError(err, 'at password comparison --at attempt to login');
 
@@ -140,15 +215,27 @@ router.post('/login', async function (req, res) {
       });
     }
 
-    userPrepared =  userObject(check)
-    let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
+    userPrepared = userObject(check)
+
+    let jwt_refresh = jwtSetToken({ ...userPrepared,'_id': check._id }, process.env.JWT_TOKEN_REFRESH,  jwtExpTime );
+    // set refresh token i database
+    check.jwtRefresh = jwt_refresh;
+    let isSaved = await check.save();
+
+    // error for testing purposes
+    if (!isSaved)
+      return serverError(dataSaved, res, 'refresh token saving')
+
+    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true });
 
     return res.status(200).send({
-      msg: {
-        loginSuccess: success
+      msg: { loginSuccess: success },
+      user: {
+        ...userPrepared,
+        jwt: check.jwt,
+        jwt_time_start:  jwtExpTime
       },
-      user: { ...userPrepared,  jwt  },
-     
+
     });
 
   })
@@ -157,14 +244,11 @@ router.post('/login', async function (req, res) {
 /* Update User*/
 router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
-
-
   var userEmail = req.fields.email ? req.fields.email : '';
   var firstName = req.fields.firstName ? req.fields.firstName : '';
   var lastName = req.fields.lastName ? req.fields.lastName : '';
 
-
-  let validateMessage = userValidator( userEmail );
+  let validateMessage = userValidator(userEmail);
   if (validateMessage)
     return res.status(401).send({
       msg: validateMessage
@@ -182,12 +266,11 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
       }
     });
 
-  // -----------[ Check and Update Email ]--------------
+  // -----------[ Check if email not exists. Update Email ]--------------
   if (userEmail && userEmail != check.email) {
     let checkEmail = User_scm.find({
       email: userEmail
     })
-
 
     if (checkEmail)
       return res.status(401).send({
@@ -195,32 +278,26 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
           emailErr: 'A user with such email already exists!'
         }
       });
-    else {
-      check.email = userEmail;
-      check.isVerified = false;
-    }
 
   }
 
+  check.email = userEmail;
+  check.isVerified = false;
   check.firstName = firstName
   check.lastName = lastName
 
-  let dataSaved = await check.save();
-  if (dataSaved) {
+  let isSaved = await check.save();
+  if (isSaved) {
 
-    userPrepared =  userObject(check)
-    let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
+    userPrepared = userObject(check);
+
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true });
 
     return res.status(200).send({
-      msg: {
-        userUpdated: userUpdated
-      },
-      user: {...userPrepared, jwt}
+      msg: { userUpdated: userUpdated },
+      user: { ...userPrepared, jwt:check.jwt },
     });
   }
-
-  
-
 
 });
 
@@ -232,54 +309,54 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
 
 
   // -----------[ Change the Password ]---------------
-  if (oldUserPassword && newUserPassword) {
-
-    var id = req.user._id;
-    var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
-
-    if (!check) {
-      return res.status(401).send({
-        msg: {
-          message: badCredentials_m
-        }
-      });
-    }
-
-
-    check.comparePassword(oldUserPassword, async (err, callBack) => {
-
-      if (err)
-        return serverError(err, `at password comparison --at updating the user: ${ check.email }`);
-
-      if (!callBack) {
-        return res.status(401).send({
-          msg: {
-            erPassword: wrongPassword
-          }
-        });
-      }
-
-      check.password = newUserPassword;
-
-      var newPasSaved = await check.save()
-
-      if (newPasSaved)
-        return res.status(200).send({
-          msg: {
-            passUpdated: passChanged
-          },
-          user: userObject(check)
-        });
-      else
-        return serverError(newPasSaved, 'saving updated data of the user');
-
-    });
-  } else
+  if (!oldUserPassword && !newUserPassword)
     return res.status(401).send({
       msg: {
         erPassword: 'Please fill in all necessary  fields for password changing !'
       }
+    }); 
+    
+
+  var id = req.user._id;
+  var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
+
+  if (!check) 
+    return res.status(401).send({
+      msg: {
+        message: badCredentials_m
+      }
     });
+  
+  check.comparePassword(oldUserPassword, async (err, callBack) => {
+
+    if (err)
+      return serverError(err, `at password comparison --at updating the user: ${ check.email }`);
+
+    if (!callBack) {
+      return res.status(401).send({
+        msg: {
+          erPassword: wrongPassword
+        }
+      });
+    }
+
+    check.password = newUserPassword;
+
+    var newPasSaved = await check.save()
+
+    if (!newPasSaved)
+      return serverError(newPasSaved, 'saving updated data of the user');
+
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true });
+    
+    return res.status(200).send({
+      msg: { passUpdated: passChanged },
+      user: { ...userObject(check), jwt: check.jwt }
+    });
+
+
+  });
+
 
 })
 
@@ -353,128 +430,109 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
 
   // -----------[ Check and Update Email ]--------------
   if (userEmail) {
-    
+
     var checkEmail = false
 
-    if (userEmail != req.user.email)
+    if ( userEmail != req.user.email )
       checkEmail = User_scm.find({
         email: userEmail
       })
 
 
-    if (checkEmail)
+    if ( checkEmail )
       return res.status(401).send({
         msg: {
           emailErr: 'A user with such email already exists!'
         }
       });
-    else {
-      var check = await User_scm.findById(req.user._id).catch(error => serverError(error, res, 'updating the user'));
 
-      var hostName = req.headers.origin;
-      var cTime = Date.now() + (1000 * 60 * 15);
-      var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
-      var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
+    var check = await User_scm.findById( req.user._id ).catch(error => serverError(error, res, 'updating the user'));
 
-      // var protocol = req.connection.encrypted ? 'https://' : 'http://';
-      var html = `<div><p>Please click the link below to confirm your email !</p> <a href='${link}'>Click Here</a></div>`;
+    var hostName = req.headers.origin;
+    var cTime = Date.now() + (1000 * 60 * 15);
+    var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
+    var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
 
-      // --- change data in database
-      check.token = hash;
-      check.timeToken = cTime;
-      check.isVerified = false;
+    // var protocol = req.connection.encrypted ? 'https://' : 'http://';
+    var html = `<div><p>Please click the link below to confirm your email !</p> <a href='${link}'>Click Here</a></div>`;
 
-      let dataSaved = await check.save();
+    // --- change data in database
+    check.token = hash;
+    check.timeToken = cTime;
+    check.isVerified = false;
 
-      if (dataSaved) {
-        //  ---------- [ send email confirmation link ] -------------
-        await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
+    let dataSaved = await check.save();
 
-        userPrepared =  userObject(check)
-        let jwt = jwtSetToken({...userPrepared, '_id': check._id }, process.env.SESSION_SECRET_STR);
+    if (dataSaved) {
+      //  ---------- [ send email confirmation link ] -------------
+      await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
 
-        return res.status(200).send({
-          msg: {
-            verLinkSend: `Verification link has been sent to ${ check.email }`
-          },
-          user: {...userPrepared, jwt}
-        });
-      }
+      userPrepared = userObject(check)
+
+      res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true });
+
+      return res.status(200).send({
+        msg: { verLinkSend: `Verification link has been sent to ${ check.email }` },
+        user: {
+          ...userPrepared,
+          jwt: check.jwt,
+          jwt_time_start:  jwtExpTime
+        }
+      });
     }
 
+
   }
-  
+
 })
 
 /* Email Confirmation Check*/
 router.get('/email/confirmation', async function (req, res, next) {
   var token = req.query.token ? decodeURIComponent(req.query.token) : '';
   var email = req.query.email ? req.query.email : '';
+  var cTime = Date.now();
 
-  if (email && token) {
-    var check = await User_scm.findOne({
-      email: email
-    }).catch(error => serverError(error, 'login the user'));
-
-    if (!check)
-      return res.status(401).send({
-        msg: {
-          errorCred: badCredentials_m
-        }
-      });
-
-    if (check.token == token && check.email == email) {
-      var cTime = Date.now();
-
-      if (cTime <= check.timeToken) {
-
-        check.isVerified = true;
-        let dataSaved = await check.save();
-
-        if (dataSaved) {
-          
-          // -----------[ Create Session ]--------------
-          if (!req.session['user']) //  <<<<<<<<<<<<<<---- TO BE DONE
-            userSessionHandle(req, res, check);
-          else
-            req.session['user'] = {
-              ...req.session['user'],
-              ...{
-                isVerified: check.isVerified
-              }
-            }// >>>>>>>>>> -------
-
-          return res.status(200).send({
-            msg: {
-              regSuccess: 'success',
-              emailConfirmed: 'Эл.почта успешно подтверждена !'
-            },
-            user: userObject(check)
-          });
-        }
-
-      } else
-        return res.status(401).send({
-          msg: {
-            timeErr: emailConfEr
-          }
-        });
-
-    } else {
-      return res.status(401).send({
-        msg: {
-          errorCred: badCredentials_m
-        }
-      });
-    }
-
-  };
+  if(!email || !token)
+    return res.status(401).send({
+      msg: {
+        errorCred: badCredentials_m
+      }
+    });
 
 
-  return res.status(401).send({
+  var check = await User_scm.findOne({
+    email: email
+  }).catch(error => serverError(error, 'login the user'));
+
+
+  if ( !check || check.token != token || check.email != email ||  cTime > check.timeToken ) 
+    return res.status(401).send({
+      msg: {
+        errorCred: badCredentials_m
+      }
+    });
+
+  check.isVerified = true;
+  let isSaved = await check.save();
+
+  if (!isSaved) 
+    return res.status(401).send({
+      msg: {
+        timeErr: emailConfEr
+      }
+    });
+
+
+  return res.status(200).send({
     msg: {
-      errorCred: badCredentials_m
-    }
+      regSuccess: 'success',
+      emailConfirmed: 'Эл.почта успешно подтверждена !'
+    },
+    user: {
+      ...userObject(check),
+      jwt: check.jwt,
+      jwt_time_start:  jwtExpTime
+     }
   });
 });
 
