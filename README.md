@@ -1,11 +1,13 @@
 
 # Descrption
-API
+API ( аутентификация через JWT )
+
+Клиент лежит тут 👉 https://github.com/DavidSulava/vue-simple-spa/tree/jwt-v
 
 Реализовано с помощью Node js и Express
 
 ## Stack
 ```
-Express( express-session, session-file-store )
+Express( jsonwebtoken )
 Mongodb Atlas
 ```
