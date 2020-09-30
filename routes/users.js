@@ -231,8 +231,8 @@ router.post('/login', async function (req, res) {
     if (!isSaved)
       return serverError(dataSaved, res, 'refresh token saving')
 
-    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, SameSite:'None' });
-  
+    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, SameSite: None });
+
     return res.status(200).send({
       msg: { loginSuccess: success },
       user: {
@@ -319,19 +319,19 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
       msg: {
         erPassword: 'Please fill in all necessary  fields for password changing !'
       }
-    }); 
-    
+    })
+
 
   var id = req.user._id;
   var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
 
-  if (!check) 
+  if (!check)
     return res.status(401).send({
       msg: {
         message: badCredentials_m
       }
     });
-  
+
   check.comparePassword(oldUserPassword, async (err, callBack) => {
 
     if (err)
