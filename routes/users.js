@@ -82,7 +82,7 @@ router.get('/jwt_refresh',  function (req, res) {
       user: {
         ...userObj,
         jwt:authHeader,
-        jwt_time_start: addTime(jwtExpTimeMs)
+        jwt_time_expires: addTime(jwtExpTimeMs)
       }
     });
   })
@@ -181,7 +181,7 @@ router.post('/register', async function (req, res ) {
     user: {
       ...userPrepared,
       jwt: user.jwt,
-      jwt_time_start: addTime(jwtExpTimeMs)
+      jwt_time_expires: addTime(jwtExpTimeMs)
      }
   });
 
@@ -235,7 +235,7 @@ router.post('/login', async function (req, res) {
       user: {
         ...userPrepared,
         jwt: check.jwt,
-        jwt_time_start: addTime(jwtExpTimeMs)
+        jwt_time_expires: addTime(jwtExpTimeMs)
       },
 
     });
@@ -478,7 +478,7 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
         user: {
           ...userPrepared,
           jwt: check.jwt,
-          jwt_time_start: addTime(jwtExpTimeMs)
+          jwt_time_expires: addTime(jwtExpTimeMs)
         }
       });
     }
@@ -533,7 +533,7 @@ router.get('/email/confirmation', async function (req, res, next) {
     user: {
       ...userObject(check),
       jwt: check.jwt,
-      jwt_time_start: addTime(jwtExpTimeMs)
+      jwt_time_expires: addTime(jwtExpTimeMs)
      }
   });
 });
