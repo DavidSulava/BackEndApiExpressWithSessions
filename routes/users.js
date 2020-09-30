@@ -4,8 +4,8 @@ var router = express.Router();
 const bcrypt = require("bcryptjs");
 var jwt = require('jsonwebtoken');
 
-const User_scm = require('../backend/models/user.model');
-const userValidator = require('../backend/validators/userValidator')
+const User_scm = require('../DB/models/user.model');
+const userValidator = require('../DB/validators/userValidator')
 
 
 const {
@@ -54,7 +54,7 @@ router.get('/jwt_refresh',  function (req, res) {
   jwt.verify(jwt_refresh, process.env.JWT_TOKEN_REFRESH, async (err, user) => {
 
     // not valid token
-    if (err) 
+    if (err)
       return res.status(401).send({
         msg: { errorCred: err },
         user: null
@@ -353,7 +353,7 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
       return serverError(newPasSaved, 'saving updated data of the user');
 
     res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
-    
+
     return res.status(200).send({
       msg: { passUpdated: passChanged },
       user: { ...userObject(check), jwt: check.jwt }
@@ -510,7 +510,7 @@ router.get('/email/confirmation', async function (req, res, next) {
   }).catch(error => serverError(error, 'login the user'));
 
 
-  if ( !check || check.token != token || check.email != email ||  cTime > check.timeToken ) 
+  if ( !check || check.token != token || check.email != email ||  cTime > check.timeToken )
     return res.status(401).send({
       msg: {
         errorCred: badCredentials_m

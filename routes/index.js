@@ -4,7 +4,7 @@ var router = express.Router();
 const {jwtGetByToken } = require("../helpers/helpers");
 
 
-const User_scm = require('../backend/models/user.model');
+const User_scm = require('../DB/models/user.model');
 
 /* GET home page. */
 router.get('/bills', jwtGetByToken, async function(req, res, next) {
