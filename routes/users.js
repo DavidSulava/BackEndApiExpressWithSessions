@@ -44,9 +44,9 @@ router.get('/checkUser', jwtGetByToken, async function (req, res) {
 router.get('/jwt_refresh',  function (req, res) {
 
   const jwt_refresh = req.cookies.jwt_refresh && req.cookies.jwt_refresh.split(" ")[0];
-  const authHeader  = req.get('authorization');
 
-  if (!jwt_refresh || !authHeader)
+
+  if (!jwt_refresh)
     return res.status(401).send({
       user: null
     });
@@ -62,7 +62,7 @@ router.get('/jwt_refresh',  function (req, res) {
 
     var check = await User_scm.findById(user._id).catch(error => serverError(error, res, 'updating the user'));
 
-    if (!check || !check.jwtRefresh || check.jwtRefresh != jwt_refresh  || authHeader != check.jwt )
+    if (!check || !check.jwtRefresh || check.jwtRefresh != jwt_refresh   )
       return res.status(400).send({
         msg: {
           message: badCredentials_m
@@ -83,7 +83,7 @@ router.get('/jwt_refresh',  function (req, res) {
     return res.status(200).send({
       user: {
         ...userObj,
-        jwt:authHeader,
+        jwt: check.jwt,
         jwt_time_expires: addTime(jwtExpTimeMs)
       }
     });
