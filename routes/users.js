@@ -231,7 +231,7 @@ router.post('/login', async function (req, res) {
     if (!isSaved)
       return serverError(dataSaved, res, 'refresh token saving')
 
-    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, SameSite: None });
+    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, SameSite: 'None' });
 
     return res.status(200).send({
       msg: { loginSuccess: success },
