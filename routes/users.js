@@ -25,7 +25,9 @@ const emailConfEr = 'Email verification timeout exceeded ! Please, login and ver
 const passChanged = 'Пароль успешно изменен';
 const wrongPassword = 'Неверный пароль';
 
+// time for jwt library
 const jwtExpTime = eval(process.env.JWT_EXPIRES);
+// time for the client
 const jwtExpTimeMs = eval(process.env.JWT_EXPIRES_MS);
 
 
