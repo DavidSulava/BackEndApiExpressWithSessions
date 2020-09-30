@@ -155,15 +155,16 @@ router.post('/register', async function (req, res ) {
     isVerified: false
   }
 
+
   var user = new User_scm({
-    _id: new ObjectId(),
     ...userPrepared,
-    jwt: jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN),
-    jwtRefresh: jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime),
     password: userPassword,
     token: hash,
     timeToken: cTime
   });
+
+  user.jwt = jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN);
+  user.jwtRefresh= jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime)
 
   let isSaved = await user.save();
   if (!isSaved)
@@ -519,7 +520,7 @@ router.get('/email/confirmation', async function (req, res, next) {
   check.isVerified = true;
   let isSaved = await check.save();
 
-  if (!isSaved) 
+  if ( !isSaved )
     return res.status(401).send({
       msg: {
         timeErr: emailConfEr
