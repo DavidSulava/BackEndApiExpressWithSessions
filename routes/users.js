@@ -32,14 +32,6 @@ const jwtExpTimeMs = eval(process.env.JWT_EXPIRES_MS);
 
 
 
-/* Check if User exists in Session*/
-router.get('/checkUser', jwtGetByToken, async function (req, res) {
-
-  return res.status(200).send({
-    user: req.user
-  });
-});
-
 /* Refresh jwt token*/
 router.get('/jwt_refresh',  function (req, res) {
 
@@ -98,7 +90,7 @@ router.get('/logOut', jwtGetByToken, async function (req, res) {
 
   var id = req.user._id
 
-  var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
+  var check = await User_scm.findById( id ).catch(error => serverError(error, res, 'updating the user'));
 
   if(check){
     check.jwtRefresh = null;
@@ -223,6 +215,7 @@ router.post('/login', async function (req, res) {
     userPrepared = userObject(check)
 
     let jwt_refresh = jwtSetToken({ ...userPrepared,'_id': check._id }, process.env.JWT_TOKEN_REFRESH,  jwtExpTime );
+
     // set refresh token i database
     check.jwtRefresh = jwt_refresh;
     let isSaved = await check.save();
@@ -232,6 +225,7 @@ router.post('/login', async function (req, res) {
       return serverError(dataSaved, res, 'refresh token saving')
 
     res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, secure:true, sameSite: 'None' });
+
 
     return res.status(200).send({
       msg: { loginSuccess: success },

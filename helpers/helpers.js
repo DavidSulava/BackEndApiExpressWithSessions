@@ -5,7 +5,7 @@ var jwt = require('jsonwebtoken');
 const jwtSetToken = (object, secret, expires=null ) => {
 
   // JWT
-  if( !expires ) 
+  if( !expires )
     return jwt.sign( object, secret );
 
   // JWT - refresh
@@ -18,11 +18,11 @@ const jwtGetByToken = (req, res, next) => {
   const jwt_static= authHeader && authHeader.split(" ")[0];
 
   const jwt_refresh = req.cookies.jwt_refresh && req.cookies.jwt_refresh.split(" ")[0]
-  
+
   if (!jwt_static || !jwt_refresh ) return res.status(401).send({
     user: null
   });
- 
+
   try{
     jwt.verify( jwt_refresh, process.env.JWT_TOKEN_REFRESH );
   }
@@ -31,7 +31,7 @@ const jwtGetByToken = (req, res, next) => {
     return res.status(401).send({
       msg:{ errorCred: 'Session expired' },
       user: null
-    }); 
+    });
   }
 
   jwt.verify( jwt_static, process.env.JWT_TOKEN, (err, user) => {
