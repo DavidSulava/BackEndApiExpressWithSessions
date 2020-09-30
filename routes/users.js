@@ -78,7 +78,7 @@ router.get('/jwt_refresh',  function (req, res) {
     if (!isSaved)
       return serverError(dataSaved, res, 'refresh token saving')
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, SameSite:'None' })
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' })
 
     return res.status(200).send({
       user: {
@@ -177,7 +177,7 @@ router.post('/register', async function (req, res ) {
   await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
 
   // --------- [ return Response] ---------------
-  res.cookie("jwt_refresh", user.jwtRefresh, { httpOnly: true, SameSite:'None' });
+  res.cookie("jwt_refresh", user.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
 
   return res.status(200).json({
     msg: { regSuccess: user.email + registered },
@@ -296,7 +296,7 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
     userPrepared = userObject(check);
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, SameSite:'None' });
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
 
     return res.status(200).send({
       msg: { userUpdated: userUpdated },
@@ -352,7 +352,7 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
     if (!newPasSaved)
       return serverError(newPasSaved, 'saving updated data of the user');
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, SameSite:'None' });
+    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
     
     return res.status(200).send({
       msg: { passUpdated: passChanged },
@@ -474,7 +474,7 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
 
       userPrepared = userObject(check)
 
-      res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, SameSite:'None' });
+      res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
 
       return res.status(200).send({
         msg: { verLinkSend: `Verification link has been sent to ${ check.email }` },
