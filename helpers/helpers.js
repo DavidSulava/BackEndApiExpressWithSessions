@@ -50,21 +50,6 @@ const jwtGetByToken = (req, res, next) => {
   })
 }
 
-const userSessionHandle = (req, res, user) => {
-  if (!req.session['user']) {
-    req.session['user'] = {
-      _id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      isVerified: user.isVerified,
-    };
-
-  } else {
-    res.clearCookie('connect.sid')
-  }
-
-}
 const userObject = (data) => {
 
   return {
