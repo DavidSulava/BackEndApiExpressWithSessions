@@ -99,7 +99,6 @@ const addTime = (addedTime)=>{
 }
 
 module.exports = {
-  userSessionHandle,
   userObject,
   sendEmail,
   jwtGetByToken,
