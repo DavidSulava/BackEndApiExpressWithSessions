@@ -2,7 +2,6 @@ const nodemailer = require("nodemailer");
 var jwt = require('jsonwebtoken');
 
 
-
 const jwtSetToken = (object, secret, expires=null ) => {
 
   // JWT
@@ -25,7 +24,7 @@ const jwtGetByToken = (req, res, next) => {
   });
  
   try{
-    jwt.verify( jwt_refresh, process.env.JWT_TOKEN_REFRESH )
+    jwt.verify( jwt_refresh, process.env.JWT_TOKEN_REFRESH );
   }
   catch(err){
     // not valid token
@@ -110,6 +109,9 @@ const serverError = function (error, res, at_where = '') {
 
 }
 
+const addTime = (addedTime)=>{
+  return Date.now() + addedTime ;
+}
 
 module.exports = {
   userSessionHandle,
@@ -118,4 +120,5 @@ module.exports = {
   jwtGetByToken,
   jwtSetToken,
   serverError,
+  addTime
 }

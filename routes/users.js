@@ -10,11 +10,11 @@ const userValidator = require('../backend/validators/userValidator')
 
 const {
   serverError,
-  userSessionHandle,
   userObject,
   sendEmail,
   jwtGetByToken,
-  jwtSetToken
+  jwtSetToken,
+  addTime
 } = require("../helpers/helpers");
 
 const badCredentials_m = "Пользователя с такими данными не существует";
@@ -26,6 +26,7 @@ const passChanged = 'Пароль успешно изменен';
 const wrongPassword = 'Неверный пароль';
 
 const jwtExpTime = eval(process.env.JWT_EXPIRES);
+const jwtExpTimeMs = eval(process.env.JWT_EXPIRES_MS);
 
 
 
@@ -59,7 +60,7 @@ router.get('/jwt_refresh',  function (req, res) {
 
     var check = await User_scm.findById(user._id).catch(error => serverError(error, res, 'updating the user'));
 
-    if (!check || !check.jwtRefresh || authHeader != check.jwt )
+    if (!check || !check.jwtRefresh || check.jwtRefresh != jwt_refresh  || authHeader != check.jwt )
       return res.status(400).send({
         msg: {
           message: badCredentials_m
@@ -81,7 +82,7 @@ router.get('/jwt_refresh',  function (req, res) {
       user: {
         ...userObj,
         jwt:authHeader,
-        jwt_time_start: jwtExpTime
+        jwt_time_start: addTime(jwtExpTimeMs)
       }
     });
   })
@@ -180,7 +181,8 @@ router.post('/register', async function (req, res ) {
     user: {
       ...userPrepared,
       jwt: user.jwt,
-      jwt_time_start:  jwtExpTime }
+      jwt_time_start: addTime(jwtExpTimeMs)
+     }
   });
 
 });
@@ -227,13 +229,13 @@ router.post('/login', async function (req, res) {
       return serverError(dataSaved, res, 'refresh token saving')
 
     res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true });
-
+  
     return res.status(200).send({
       msg: { loginSuccess: success },
       user: {
         ...userPrepared,
         jwt: check.jwt,
-        jwt_time_start:  jwtExpTime
+        jwt_time_start: addTime(jwtExpTimeMs)
       },
 
     });
@@ -476,7 +478,7 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
         user: {
           ...userPrepared,
           jwt: check.jwt,
-          jwt_time_start:  jwtExpTime
+          jwt_time_start: addTime(jwtExpTimeMs)
         }
       });
     }
@@ -531,7 +533,7 @@ router.get('/email/confirmation', async function (req, res, next) {
     user: {
       ...userObject(check),
       jwt: check.jwt,
-      jwt_time_start:  jwtExpTime
+      jwt_time_start: addTime(jwtExpTimeMs)
      }
   });
 });
