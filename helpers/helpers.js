@@ -43,7 +43,7 @@ const jwtGetByToken = (req, res, next) => {
 
 
     req.user = user
-    res.cookie("jwt_refresh", jwt_refresh, {httpOnly: true})
+    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, secure:true, sameSite: 'None' } )
 
     next();
 
