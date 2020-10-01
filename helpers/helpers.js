@@ -60,6 +60,10 @@ const userObject = (data) => {
   }
 }
 
+const cookieSettings =()=>{
+  return  { httpOnly: true, secure:true, sameSite: 'None' }
+}
+
 const sendEmail = async function (From, ToEmail, subject, html) {
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
@@ -104,5 +108,6 @@ module.exports = {
   jwtGetByToken,
   jwtSetToken,
   serverError,
-  addTime
+  addTime,
+  cookieSettings
 }

@@ -14,7 +14,8 @@ const {
   sendEmail,
   jwtGetByToken,
   jwtSetToken,
-  addTime
+  addTime,
+  cookieSettings
 } = require("../helpers/helpers");
 
 const badCredentials_m = "Пользователя с такими данными не существует";
@@ -70,7 +71,7 @@ router.get('/jwt_refresh',  function (req, res) {
     if (!isSaved)
       return serverError(dataSaved, res, 'refresh token saving')
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' })
+    res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings())
 
     return res.status(200).send({
       user: {
@@ -82,7 +83,6 @@ router.get('/jwt_refresh',  function (req, res) {
   })
 
 });
-
 
 
 /* Delete User Session*/
@@ -169,7 +169,7 @@ router.post('/register', async function (req, res ) {
   await sendEmail(hostName, userEmail, 'email confirmation', html).catch(console.error);
 
   // --------- [ return Response] ---------------
-  res.cookie("jwt_refresh", user.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
+  res.cookie("jwt_refresh", user.jwtRefresh, cookieSettings());
 
   return res.status(200).json({
     msg: { regSuccess: user.email + registered },
@@ -224,7 +224,7 @@ router.post('/login', async function (req, res) {
     if (!isSaved)
       return serverError(dataSaved, res, 'refresh token saving')
 
-    res.cookie("jwt_refresh", jwt_refresh, { httpOnly: true, secure:true, sameSite: 'None' });
+    res.cookie("jwt_refresh", jwt_refresh, cookieSettings());
 
 
     return res.status(200).send({
@@ -290,7 +290,7 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
     userPrepared = userObject(check);
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
+    res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings() );
 
     return res.status(200).send({
       msg: { userUpdated: userUpdated },
@@ -303,9 +303,9 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
 /* [ Change the Password ]*/
 router.post('/newPassword', jwtGetByToken, async function (req, res) {
+
   var oldUserPassword = req.fields.password ? req.fields.password : '';
   var newUserPassword = req.fields.new_assword ? req.fields.new_assword : '';
-
 
   // -----------[ Change the Password ]---------------
   if (!oldUserPassword && !newUserPassword)
@@ -314,7 +314,6 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
         erPassword: 'Please fill in all necessary  fields for password changing !'
       }
     })
-
 
   var id = req.user._id;
   var check = await User_scm.findById(id).catch(error => serverError(error, res, 'updating the user'));
@@ -346,7 +345,7 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
     if (!newPasSaved)
       return serverError(newPasSaved, 'saving updated data of the user');
 
-    res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
+    res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings() );
 
     return res.status(200).send({
       msg: { passUpdated: passChanged },
@@ -468,7 +467,7 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
 
       userPrepared = userObject(check)
 
-      res.cookie("jwt_refresh", check.jwtRefresh, { httpOnly: true, secure:true, sameSite: 'None' });
+      res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings() );
 
       return res.status(200).send({
         msg: { verLinkSend: `Verification link has been sent to ${ check.email }` },
