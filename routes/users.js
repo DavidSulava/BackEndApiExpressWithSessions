@@ -1,10 +1,10 @@
 var express = require('express');
-var router = express.Router();
+var router  = express.Router();
 
 const bcrypt = require("bcryptjs");
-var jwt = require('jsonwebtoken');
+var jwt      = require('jsonwebtoken');
 
-const User_scm = require('../DB/models/user.model');
+const User_scm      = require('../DB/models/user.model');
 const userValidator = require('../DB/validators/userValidator')
 
 
@@ -19,15 +19,15 @@ const {
 } = require("../helpers/helpers");
 
 const badCredentials_m = "Пользователя с такими данными не существует";
-const success = "Введенные данные верны, доступ разрешен.";
-const registered = " зарегестрирован.";
-const userUpdated = "Данные пользователя изменены";
-const emailConfEr = 'Email verification timeout exceeded ! Please, login and verify your email agin in user settings';
-const passChanged = 'Пароль успешно изменен';
-const wrongPassword = 'Неверный пароль';
+const success          = "Введенные данные верны, доступ разрешен.";
+const registered       = " зарегестрирован.";
+const userUpdated      = "Данные пользователя изменены";
+const emailConfEr      = 'Email verification timeout exceeded ! Please, login and verify your email agin in user settings';
+const passChanged      = 'Пароль успешно изменен';
+const wrongPassword    = 'Неверный пароль';
 
 // time for jwt library
-const jwtExpTime = eval(process.env.JWT_EXPIRES);
+const jwtExpTime   = eval(process.env.JWT_EXPIRES);
 // time for the client
 const jwtExpTimeMs = eval(process.env.JWT_EXPIRES_MS);
 
@@ -49,8 +49,8 @@ router.get('/jwt_refresh',  function (req, res) {
     // not valid token
     if (err)
       return res.status(401).send({
-        msg: { errorCred: err },
-        user: null
+        msg  : { errorCred: err },
+        user : null
       });
 
     var check = await User_scm.findById(user._id).catch(error => serverError(error, res, 'updating the user'));
@@ -65,7 +65,7 @@ router.get('/jwt_refresh',  function (req, res) {
     let userObj = userObject(check)
 
     check.jwtRefresh = jwtSetToken({ ...userObj,'_id': check._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime );
-    let isSaved = await check.save();
+    let isSaved      = await check.save();
 
     // error for testing purposes
     if (!isSaved)
@@ -105,10 +105,10 @@ router.get('/logOut', jwtGetByToken, async function (req, res) {
 /* Register User*/
 router.post('/register', async function (req, res ) {
 
-  var userEmail = req.fields.email ? req.fields.email : '';
-  var firstName = req.fields.firstName ? req.fields.firstName : '';
-  var lastName = req.fields.lastName ? req.fields.lastName : '';
-  var userPassword = req.fields.password ? req.fields.password : '';
+  var userEmail             = req.fields.email ? req.fields.email                                 : '';
+  var firstName             = req.fields.firstName ? req.fields.firstName                         : '';
+  var lastName              = req.fields.lastName ? req.fields.lastName                           : '';
+  var userPassword          = req.fields.password ? req.fields.password                           : '';
   var password_confirmation = req.fields.password_confirmation ? req.fields.password_confirmation : '';
 
 
@@ -185,7 +185,7 @@ router.post('/register', async function (req, res ) {
 // Login User -- find the user by his id
 router.post('/login', async function (req, res) {
 
-  var userEmail = req.fields.email ? req.fields.email : '';
+  var userEmail    = req.fields.email ? req.fields.email : '';
   var userPassword = req.fields.password ? req.fields.password : '';
 
 
@@ -231,8 +231,8 @@ router.post('/login', async function (req, res) {
       msg: { loginSuccess: success },
       user: {
         ...userPrepared,
-        jwt: check.jwt,
-        jwt_time_expires: addTime(jwtExpTimeMs)
+        jwt : check.jwt,
+        jwt_time_expires : addTime(jwtExpTimeMs)
       },
 
     });
@@ -245,7 +245,7 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
   var userEmail = req.fields.email ? req.fields.email : '';
   var firstName = req.fields.firstName ? req.fields.firstName : '';
-  var lastName = req.fields.lastName ? req.fields.lastName : '';
+  var lastName  = req.fields.lastName ? req.fields.lastName : '';
 
   let validateMessage = userValidator(userEmail);
   if (validateMessage)
@@ -280,10 +280,10 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
   }
 
-  check.email = userEmail;
+  check.email      = userEmail;
   check.isVerified = false;
-  check.firstName = firstName
-  check.lastName = lastName
+  check.firstName  = firstName
+  check.lastName   = lastName
 
   let isSaved = await check.save();
   if (isSaved) {
@@ -361,7 +361,7 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
 /* Delete User*/
 router.post('/deleteUser', jwtGetByToken, async function (req, res) {
 
-  var userEmail = req.fields.email ? req.fields.email : '';
+  var userEmail    = req.fields.email ? req.fields.email : '';
   var userPassword = req.fields.password ? req.fields.password : '';
 
 
@@ -371,7 +371,7 @@ router.post('/deleteUser', jwtGetByToken, async function (req, res) {
       msg: validatePass
     });
 
-  var id = req.user._id || null;
+  var id    = req.user._id || null;
   var check = await User_scm.findById(id).catch(error => serverError(error, 'deleting the user'));
 
   if (!check)
@@ -415,8 +415,6 @@ router.post('/deleteUser', jwtGetByToken, async function (req, res) {
 
     });
 
-
-
   });
 
 });
@@ -432,9 +430,7 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
     var checkEmail = false
 
     if ( userEmail != req.user.email )
-      checkEmail = User_scm.find({
-        email: userEmail
-      })
+      checkEmail = User_scm.find({ email: userEmail })
 
 
     if ( checkEmail )
@@ -447,16 +443,16 @@ router.get('/email/sendVerification', jwtGetByToken, async function (req, res) {
     var check = await User_scm.findById( req.user._id ).catch(error => serverError(error, res, 'updating the user'));
 
     var hostName = req.headers.origin;
-    var cTime = Date.now() + (1000 * 60 * 15);
-    var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
-    var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
+    var cTime    = Date.now() + (1000 * 60 * 15);
+    var hash     = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
+    var link     = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
 
     // var protocol = req.connection.encrypted ? 'https://' : 'http://';
     var html = `<div><p>Please click the link below to confirm your email !</p> <a href='${link}'>Click Here</a></div>`;
 
     // --- change data in database
-    check.token = hash;
-    check.timeToken = cTime;
+    check.token      = hash;
+    check.timeToken  = cTime;
     check.isVerified = false;
 
     let dataSaved = await check.save();

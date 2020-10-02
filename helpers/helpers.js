@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-var jwt = require('jsonwebtoken');
+var jwt          = require('jsonwebtoken');
 
 
 const jwtSetToken = (object, secret, expires=null ) => {
@@ -15,7 +15,7 @@ const jwtSetToken = (object, secret, expires=null ) => {
 const jwtGetByToken = (req, res, next) => {
 
   const authHeader = req.get('authorization');
-  const jwt_static= authHeader && authHeader.split(" ")[0];
+  const jwt_static = authHeader && authHeader.split(" ")[0];
 
   const jwt_refresh = req.cookies.jwt_refresh && req.cookies.jwt_refresh.split(" ")[0]
 
@@ -29,16 +29,16 @@ const jwtGetByToken = (req, res, next) => {
   catch(err){
     // not valid token
     return res.status(401).send({
-      msg:{ errorCred: 'Session expired' },
-      user: null
+      msg  :{ errorCred: 'Session expired' },
+      user : null
     });
   }
 
   jwt.verify( jwt_static, process.env.JWT_TOKEN, (err, user) => {
 
     if (err) return res.status(401).send({
-      msg:{ errorCred: err },
-      user: null
+      msg  :{ errorCred: err },
+      user : null
     }); // not valid token
 
 
@@ -53,10 +53,10 @@ const jwtGetByToken = (req, res, next) => {
 const userObject = (data) => {
 
   return {
-    email: data.email,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    isVerified: data.isVerified
+    email      : data.email,
+    firstName  : data.firstName,
+    lastName   : data.lastName,
+    isVerified : data.isVerified
   }
 }
 
@@ -67,22 +67,21 @@ const cookieSettings =()=>{
 const sendEmail = async function (From, ToEmail, subject, html) {
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465, // 587, 465
-    secure: true, // true for 465, false for other ports
-    auth: {
-      user: process.env.CONTACT_EMAIL,
-      pass: process.env.CONTACT_EMAIL_PASSWORD,
+    host   : "smtp.gmail.com",
+    port   : 465, // 587, 465
+    secure : true, // true for 465, false for other ports
+    auth   : {
+      user : process.env.CONTACT_EMAIL,
+      pass : process.env.CONTACT_EMAIL_PASSWORD,
     }
   });
 
   // send mail with defined transport object
-  let info = await transporter.sendMail({
-    from: `${From} <webproto3@gmail.com>`, // sender address
-    to: ToEmail, // list of receivers
-    subject: subject, // Subject line
-    html: html // html body
-
+  await transporter.sendMail({
+    from    : `${From} <webproto3@gmail.com>`, // sender address
+    to      : ToEmail, // list of receivers
+    subject : subject, // Subject line
+    html    : html // html body
   });
 
 }
