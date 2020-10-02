@@ -134,29 +134,29 @@ router.post('/register', async function (req, res ) {
   //  ---------- [ variables for email authentication ] -------------
 
   var hostName = req.headers.origin;
-  var cTime = Date.now() + (1000 * 60 * 15);
-  var hash = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
-  var link = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
+  var cTime    = Date.now() + (1000 * 60 * 15);
+  var hash     = bcrypt.hashSync(`${ cTime }_${ userEmail }`, 8);
+  var link     = `${hostName}/email/authentication/${userEmail}/${encodeURIComponent(hash)}`;
 
   // -----------[ Handle jwt ]--------------
 
   let userPrepared = {
-    email: userEmail,
-    firstName: firstName,
-    lastName: lastName,
-    isVerified: false
+    email      : userEmail,
+    firstName  : firstName,
+    lastName   : lastName,
+    isVerified : false
   }
 
 
   var user = new User_scm({
     ...userPrepared,
-    password: userPassword,
-    token: hash,
-    timeToken: cTime
+    password  : userPassword,
+    token     : hash,
+    timeToken : cTime
   });
 
-  user.jwt = jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN);
-  user.jwtRefresh= jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime)
+  user.jwt        = jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN);
+  user.jwtRefresh = jwtSetToken({ ...userPrepared, '_id': user._id }, process.env.JWT_TOKEN_REFRESH, jwtExpTime)
 
   let isSaved = await user.save();
   if (!isSaved)
@@ -218,7 +218,7 @@ router.post('/login', async function (req, res) {
 
     // set refresh token i database
     check.jwtRefresh = jwt_refresh;
-    let isSaved = await check.save();
+    let isSaved      = await check.save();
 
     // error for testing purposes
     if (!isSaved)
@@ -243,9 +243,9 @@ router.post('/login', async function (req, res) {
 /* Update User*/
 router.post('/updateUser', jwtGetByToken, async function (req, res) {
 
-  var userEmail = req.fields.email ? req.fields.email : '';
+  var userEmail = req.fields.email     ? req.fields.email     : '';
   var firstName = req.fields.firstName ? req.fields.firstName : '';
-  var lastName  = req.fields.lastName ? req.fields.lastName : '';
+  var lastName  = req.fields.lastName  ? req.fields.lastName  : '';
 
   let validateMessage = userValidator(userEmail);
   if (validateMessage)
@@ -293,8 +293,8 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
     res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings() );
 
     return res.status(200).send({
-      msg: { userUpdated: userUpdated },
-      user: { ...userPrepared, jwt:check.jwt },
+      msg  : { userUpdated: userUpdated },
+      user : { ...userPrepared, jwt:check.jwt },
     });
   }
 
@@ -304,7 +304,7 @@ router.post('/updateUser', jwtGetByToken, async function (req, res) {
 /* [ Change the Password ]*/
 router.post('/newPassword', jwtGetByToken, async function (req, res) {
 
-  var oldUserPassword = req.fields.password ? req.fields.password : '';
+  var oldUserPassword = req.fields.password    ? req.fields.password    : '';
   var newUserPassword = req.fields.new_assword ? req.fields.new_assword : '';
 
   // -----------[ Change the Password ]---------------
@@ -348,14 +348,10 @@ router.post('/newPassword', jwtGetByToken, async function (req, res) {
     res.cookie("jwt_refresh", check.jwtRefresh, cookieSettings() );
 
     return res.status(200).send({
-      msg: { passUpdated: passChanged },
-      user: { ...userObject(check), jwt: check.jwt }
+      msg  : { passUpdated: passChanged },
+      user : { ...userObject(check), jwt: check.jwt }
     });
-
-
   });
-
-
 })
 
 /* Delete User*/
@@ -412,11 +408,8 @@ router.post('/deleteUser', jwtGetByToken, async function (req, res) {
             message: `Something went wrong at deleting ${ deletedUser } `
           }
         });
-
     });
-
   });
-
 });
 
 // send verification link from user settings
@@ -518,9 +511,9 @@ router.get('/email/confirmation', async function (req, res, next) {
 
 
   return res.status(200).send({
-    msg: {
-      regSuccess: 'success',
-      emailConfirmed: 'Эл.почта успешно подтверждена !'
+    msg : {
+      regSuccess     : 'success',
+      emailConfirmed : 'Эл.почта успешно подтверждена !'
     },
     user: {
       ...userObject(check),
