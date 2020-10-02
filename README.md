@@ -1,10 +1,10 @@
 
-# Descrption
+# Описание
 API ( аутентификация через JWT )
 
-Клиент лежит тут 👉 https://github.com/DavidSulava/vue-simple-spa/tree/jwt-v
+Клиент лежит 👉[тут](https://github.com/DavidSulava/vue-simple-spa/tree/jwt-v)
 
-Реализовано с помощью Node js и Express
+Реализовано с помощью __Node__ js и __Express__
 
 ## Stack
 ```
