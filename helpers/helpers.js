@@ -2,14 +2,14 @@ const nodemailer = require("nodemailer");
 var jwt          = require('jsonwebtoken');
 
 
-const jwtSetToken = (object, secret, expires=null ) => {
+const jwtSetToken = (userObject, secret, expires=null ) => {
 
-  // JWT
+  // JWT - permanent token
   if( !expires )
-    return jwt.sign( object, secret );
+    return jwt.sign( userObject, secret );
 
   // JWT - refresh
-  return jwt.sign( object, secret, { expiresIn: expires } );
+  return jwt.sign( userObject, secret, { expiresIn: expires } );
 }
 
 const jwtGetByToken = (req, res, next) => {
@@ -87,7 +87,7 @@ const sendEmail = async function (From, ToEmail, subject, html) {
 }
 
 const serverError = function (error, res, at_where = '') {
-  // .... to be improved.
+  //TODO: this is only a crutch. Has to be improved
   console.error(`-*-something went wrong at ${ at_where } -*-`, error);
   return res.status(500).json({
     msg: {
